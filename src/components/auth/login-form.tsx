@@ -125,6 +125,7 @@ export function LoginForm() {
                 src="/logo.png"
                 alt="UNIAJC Logo"
                 fill
+                sizes="80px"
                 className="object-contain"
                 priority
               />

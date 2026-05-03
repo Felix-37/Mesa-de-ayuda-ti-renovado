@@ -242,7 +242,16 @@ export function SettingsView() {
           <Button
             variant="outline"
             className="w-full justify-start gap-2 h-auto py-3"
-            onClick={() => useAppStore.getState().setCurrentView('profile')}
+            onClick={() => {
+              useAppStore.getState().setCurrentView('profile')
+              // Scroll to password section after navigation
+              setTimeout(() => {
+                const passwordSection = document.querySelector('[data-section="password"]')
+                if (passwordSection) {
+                  passwordSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                }
+              }, 100)
+            }}
           >
             <div className="size-8 rounded-lg bg-green-50 flex items-center justify-center shrink-0">
               <Lock className="size-4 text-green-600" />

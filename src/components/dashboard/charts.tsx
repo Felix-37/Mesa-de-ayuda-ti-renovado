@@ -16,6 +16,7 @@ import {
 } from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { BarChart3 } from 'lucide-react'
 import type { TicketPriority } from '@/lib/types'
 
 interface ChartsData {
@@ -110,12 +111,14 @@ export function Charts({ data, loading }: ChartsProps) {
     })
   )
 
-  // Transform category data for pie chart
-  const categoryData = data.ticketsByCategory.map((cat, index) => ({
-    name: typeof cat.category === 'string' ? cat.category : (cat.category as { name: string }).name,
-    value: cat.count,
-    color: cat.color || (typeof cat.category === 'string' ? '' : (cat.category as { color: string }).color) || CATEGORY_FALLBACK_COLORS[index % CATEGORY_FALLBACK_COLORS.length],
-  }))
+  // Transform category data for pie chart - filter out categories with 0 tickets
+  const categoryData = data.ticketsByCategory
+    .filter((cat) => cat.count > 0)
+    .map((cat, index) => ({
+      name: typeof cat.category === 'string' ? cat.category : (cat.category as { name: string }).name,
+      value: cat.count,
+      color: cat.color || (typeof cat.category === 'string' ? '' : (cat.category as { color: string }).color) || CATEGORY_FALLBACK_COLORS[index % CATEGORY_FALLBACK_COLORS.length],
+    }))
 
   // Format date labels for the area chart
   const timeData = data.ticketsOverTime.map((item) => {
@@ -168,7 +171,7 @@ export function Charts({ data, loading }: ChartsProps) {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={categoryData}
+                  data={categoryData.length > 0 ? categoryData : [{ name: 'Sin datos', value: 1, color: '#e2e8f0' }]}
                   cx="50%"
                   cy="50%"
                   innerRadius={55}
@@ -177,13 +180,13 @@ export function Charts({ data, loading }: ChartsProps) {
                   dataKey="value"
                   nameKey="name"
                   label={({ name, percent }) =>
-                    `${name} (${(percent * 100).toFixed(0)}%)`
+                    categoryData.length === 0 ? '' : `${name} (${(percent * 100).toFixed(0)}%)`
                   }
-                  labelLine={true}
+                  labelLine={categoryData.length > 0}
                 >
-                  {categoryData.map((entry, index) => (
+                  {categoryData.length > 0 ? categoryData.map((entry, index) => (
                     <Cell key={index} fill={entry.color || CATEGORY_FALLBACK_COLORS[index % CATEGORY_FALLBACK_COLORS.length]} />
-                  ))}
+                  )) : <Cell fill="#e2e8f0" />}
                 </Pie>
                 <Tooltip content={<CustomTooltip />} />
               </PieChart>
@@ -199,36 +202,43 @@ export function Charts({ data, loading }: ChartsProps) {
         </CardHeader>
         <CardContent>
           <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={timeData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                <defs>
-                  <linearGradient id="colorTickets" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={CHART_COLORS.area} stopOpacity={0.3} />
-                    <stop offset="95%" stopColor={CHART_COLORS.area} stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
-                <XAxis
-                  dataKey="label"
-                  tick={{ fill: CHART_COLORS.axisText, fontSize: 12 }}
-                  axisLine={{ stroke: CHART_COLORS.grid }}
-                />
-                <YAxis
-                  tick={{ fill: CHART_COLORS.axisText, fontSize: 12 }}
-                  axisLine={{ stroke: CHART_COLORS.grid }}
-                  allowDecimals={false}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Area
-                  type="monotone"
-                  dataKey="count"
-                  name="Tickets"
-                  stroke={CHART_COLORS.area}
-                  strokeWidth={2}
-                  fill="url(#colorTickets)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            {timeData.every((d) => d.count === 0) ? (
+              <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                <BarChart3 className="size-12 opacity-30 mb-2" />
+                <p className="text-sm">No hay tickets en los últimos 7 días</p>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={timeData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                  <defs>
+                    <linearGradient id="colorTickets" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={CHART_COLORS.area} stopOpacity={0.3} />
+                      <stop offset="95%" stopColor={CHART_COLORS.area} stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
+                  <XAxis
+                    dataKey="label"
+                    tick={{ fill: CHART_COLORS.axisText, fontSize: 12 }}
+                    axisLine={{ stroke: CHART_COLORS.grid }}
+                  />
+                  <YAxis
+                    tick={{ fill: CHART_COLORS.axisText, fontSize: 12 }}
+                    axisLine={{ stroke: CHART_COLORS.grid }}
+                    allowDecimals={false}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Area
+                    type="monotone"
+                    dataKey="count"
+                    name="Tickets"
+                    stroke={CHART_COLORS.area}
+                    strokeWidth={2}
+                    fill="url(#colorTickets)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </CardContent>
       </Card>

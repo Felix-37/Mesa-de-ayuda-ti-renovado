@@ -26,6 +26,7 @@ const statsConfig = [
     iconBg: 'bg-white/20',
     textColor: 'text-white',
     valueColor: 'text-white',
+    showPercentage: false,
   },
   {
     key: 'openTickets' as const,
@@ -35,6 +36,7 @@ const statsConfig = [
     iconBg: 'bg-white/20',
     textColor: 'text-white',
     valueColor: 'text-white',
+    showPercentage: true,
   },
   {
     key: 'inProgressTickets' as const,
@@ -44,6 +46,7 @@ const statsConfig = [
     iconBg: 'bg-white/20',
     textColor: 'text-white',
     valueColor: 'text-white',
+    showPercentage: true,
   },
   {
     key: 'resolvedTickets' as const,
@@ -53,6 +56,7 @@ const statsConfig = [
     iconBg: 'bg-white/20',
     textColor: 'text-white',
     valueColor: 'text-white',
+    showPercentage: true,
   },
   {
     key: 'closedTickets' as const,
@@ -62,6 +66,7 @@ const statsConfig = [
     iconBg: 'bg-white/20',
     textColor: 'text-white',
     valueColor: 'text-white',
+    showPercentage: true,
   },
 ]
 
@@ -105,10 +110,12 @@ export function StatsCards({ data, loading }: StatsCardsProps) {
                 <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${config.iconBg}`}>
                   <Icon className="h-5 w-5 text-white" />
                 </div>
-                <div className="flex items-center gap-1 rounded-full bg-white/20 px-2 py-0.5">
-                  <TrendingUp className="h-3 w-3 text-white" />
-                  <span className="text-xs font-medium text-white">{percentage}%</span>
-                </div>
+                {config.showPercentage && (
+                  <div className="flex items-center gap-1 rounded-full bg-white/20 px-2 py-0.5">
+                    <TrendingUp className="h-3 w-3 text-white" />
+                    <span className="text-xs font-medium text-white">{percentage}%</span>
+                  </div>
+                )}
               </div>
               <div className="mt-3">
                 <p className={`text-2xl font-bold sm:text-3xl ${config.valueColor}`}>

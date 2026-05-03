@@ -92,6 +92,70 @@ const bottomNavItems: NavItem[] = [
   },
 ]
 
+function getRoleBadgeColor(role: string) {
+  switch (role) {
+    case 'ADMIN':
+      return 'bg-accent-yellow-500 text-navy-950'
+    case 'AGENT':
+      return 'bg-green-500 text-white'
+    default:
+      return 'bg-white/20 text-white'
+  }
+}
+
+// NavButton is now a proper top-level component (not inside AppSidebar)
+// It receives all needed data as props to avoid re-creation on every render
+function NavButton({
+  item,
+  active,
+  sidebarOpen,
+  onNavClick,
+}: {
+  item: NavItem
+  active: boolean
+  sidebarOpen: boolean
+  onNavClick: (item: NavItem) => void
+}) {
+  const button = (
+    <button
+      onClick={() => onNavClick(item)}
+      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 group relative ${
+        active
+          ? 'bg-accent-yellow-500 text-navy-950 shadow-md translate-x-1'
+          : 'text-navy-300 hover:bg-navy-800/50 hover:text-white'
+      }`}
+    >
+      <div className={`transition-transform duration-200 group-hover:scale-110 ${
+        active ? 'text-navy-950' : 'text-navy-400 group-hover:text-accent-yellow-400'
+      }`}>
+        {item.icon}
+      </div>
+      <span className={`whitespace-nowrap ${!sidebarOpen ? 'hidden lg:hidden' : ''}`}>
+        {item.label}
+      </span>
+      {active && sidebarOpen && (
+        <div className="absolute left-0 w-1 h-6 bg-navy-950 rounded-r-full -ml-3" />
+      )}
+    </button>
+  )
+
+  // On collapsed sidebar, show tooltip
+  if (!sidebarOpen) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          {button}
+        </TooltipTrigger>
+        <TooltipContent side="right" className="bg-navy-900 border-navy-700 text-white">
+          {item.label}
+        </TooltipContent>
+      </Tooltip>
+    )
+  }
+
+  return button
+}
+
 export function AppSidebar() {
   const { currentUser, currentView, setCurrentView, sidebarOpen, setSidebarOpen, setTicketFormOpen, logout } = useAppStore()
 
@@ -112,17 +176,6 @@ export function AppSidebar() {
     .slice(0, 2)
     .toUpperCase()
 
-  const getRoleBadgeColor = (role: string) => {
-    switch (role) {
-      case 'ADMIN':
-        return 'bg-accent-yellow-500 text-navy-950'
-      case 'AGENT':
-        return 'bg-green-500 text-white'
-      default:
-        return 'bg-white/20 text-white'
-    }
-  }
-
   const handleNavClick = (item: NavItem) => {
     if (item.action === 'new-ticket') {
       setTicketFormOpen(true)
@@ -133,48 +186,6 @@ export function AppSidebar() {
     if (window.innerWidth < 1024) {
       setSidebarOpen(false)
     }
-  }
-
-  const isActive = (view: AppView) => currentView === view
-
-  const NavButton = ({ item }: { item: NavItem }) => {
-    const active = isActive(item.view)
-    const button = (
-      <button
-        onClick={() => handleNavClick(item)}
-        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 group relative ${
-          active
-            ? 'bg-accent-yellow-500 text-navy-950 shadow-md translate-x-1'
-            : 'text-navy-300 hover:bg-navy-800/50 hover:text-white'
-        }`}
-      >
-        <div className={`transition-transform duration-200 group-hover:scale-110 ${
-          active ? 'text-navy-950' : 'text-navy-400 group-hover:text-accent-yellow-400'
-        }`}>
-          {item.icon}
-        </div>
-        <span className="whitespace-nowrap">{item.label}</span>
-        {active && (
-          <div className="absolute left-0 w-1 h-6 bg-navy-950 rounded-r-full -ml-3" />
-        )}
-      </button>
-    )
-
-    // On collapsed sidebar, show tooltip
-    if (!sidebarOpen) {
-      return (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            {button}
-          </TooltipTrigger>
-          <TooltipContent side="right" className="bg-navy-900 border-navy-700 text-white">
-            {item.label}
-          </TooltipContent>
-        </Tooltip>
-      )
-    }
-
-    return button
   }
 
   return (
@@ -195,11 +206,12 @@ export function AppSidebar() {
       >
         {/* Header with Logo */}
         <div className="flex items-center gap-3 p-4 pb-2 h-16 border-b border-navy-800/50">
-          <div className="relative w-10 h-10 shrink-0 bg-white rounded-lg p-1 shadow-lg overflow-hidden group-hover:scale-105 transition-transform">
+          <div className="relative w-10 h-10 shrink-0 bg-white rounded-lg p-1 shadow-lg overflow-hidden">
             <Image
               src="/logo.png"
               alt="UNIAJC Logo"
               fill
+              sizes="40px"
               className="object-contain"
             />
           </div>
@@ -234,7 +246,13 @@ export function AppSidebar() {
         {/* Main Navigation */}
         <nav className="flex-1 p-3 space-y-1.5 overflow-y-auto custom-scrollbar mt-2">
           {filteredMainItems.map((item) => (
-            <NavButton key={item.view} item={item} />
+            <NavButton
+              key={item.view}
+              item={item}
+              active={currentView === item.view}
+              sidebarOpen={sidebarOpen}
+              onNavClick={handleNavClick}
+            />
           ))}
 
           {/* Nuevo Ticket Button */}
@@ -261,7 +279,13 @@ export function AppSidebar() {
           <Separator className="bg-navy-800/50" />
           <div className="pt-2 space-y-1">
             {filteredBottomItems.map((item) => (
-              <NavButton key={item.view} item={item} />
+              <NavButton
+                key={item.view}
+                item={item}
+                active={currentView === item.view}
+                sidebarOpen={sidebarOpen}
+                onNavClick={handleNavClick}
+              />
             ))}
           </div>
         </div>

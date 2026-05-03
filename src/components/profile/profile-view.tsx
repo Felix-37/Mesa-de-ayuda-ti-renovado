@@ -59,10 +59,9 @@ export function ProfileView() {
     } else if (currentUser.role === 'AGENT') {
       setStats({
         created: 0,
-        resolved: 0,
-        pending: 0,
         assigned: assignedTickets.length,
         resolved: assignedTickets.filter((t) => t.status === 'RESOLVED').length,
+        pending: assignedTickets.filter((t) => t.status === 'OPEN').length,
         inProgress: assignedTickets.filter((t) => t.status === 'IN_PROGRESS').length,
         total: 0,
       })
@@ -303,7 +302,7 @@ export function ProfileView() {
       </Card>
 
       {/* Change Password */}
-      <Card>
+      <Card data-section="password">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <Lock className="size-5 text-uniajc-blue" />

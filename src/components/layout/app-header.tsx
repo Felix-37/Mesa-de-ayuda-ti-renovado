@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useAppStore } from '@/lib/store'
 import { getRoleLabel } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -24,6 +25,7 @@ import {
   User,
   Settings,
   Download,
+  Loader2,
 } from 'lucide-react'
 import type { AppView } from '@/lib/types'
 
@@ -48,6 +50,8 @@ export function AppHeader() {
     setCurrentView,
     logout,
   } = useAppStore()
+
+  const [exporting, setExporting] = useState(false)
 
   if (!currentUser) return null
 
@@ -112,10 +116,31 @@ export function AppHeader() {
             variant="ghost"
             size="icon"
             className="shrink-0 text-gray-500 hover:text-navy-900"
-            onClick={() => setCurrentView('settings')}
-            title="Exportar datos"
+            onClick={async () => {
+              if (exporting) return
+              setExporting(true)
+              try {
+                const res = await fetch(`/api/export?userId=${currentUser.id}&role=${currentUser.role}&all=true`)
+                if (res.ok) {
+                  const blob = await res.blob()
+                  const url = URL.createObjectURL(blob)
+                  const a = document.createElement('a')
+                  a.href = url
+                  a.download = `tickets-${new Date().toISOString().split('T')[0]}.csv`
+                  document.body.appendChild(a)
+                  a.click()
+                  document.body.removeChild(a)
+                  URL.revokeObjectURL(url)
+                }
+              } catch {
+                // silently fail
+              } finally {
+                setExporting(false)
+              }
+            }}
+            title="Exportar tickets a CSV"
           >
-            <Download className="size-5" />
+            {exporting ? <Loader2 className="size-5 animate-spin" /> : <Download className="size-5" />}
           </Button>
         )}
 

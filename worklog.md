@@ -165,53 +165,25 @@ Stage Summary:
 - Login works with admin@uniajc.edu.co / 123456
 
 ---
-Task ID: 2-4-5-6
-Agent: SubAgent (full-stack-developer)
-Task: Rebuild navigation, profile, settings, and notifications UI with RBAC
+Task ID: Bug Fix Sprint
+Agent: Main
+Task: Identify and fix all visual and functional bugs through systematic testing
 
 Work Log:
-- Updated types.ts: Added 'my-tickets', 'profile', 'settings' to AppView; added Notification and UserSettings interfaces
-- Updated store.ts: Added settings state with localStorage persistence, notification state with mark-as-read actions
-- Created /api/notifications/route.ts: GET endpoint that generates notifications from ticket activity, role-aware (USER sees own ticket updates, AGENT/ADMIN see broader activity)
-- Created /api/export/route.ts: GET endpoint that exports tickets as CSV, supports per-user and all-tickets export for ADMIN/AGENT
-- Rewrote app-sidebar.tsx: RBAC navigation with role-based sidebar items, "Nuevo Ticket" in UNIAJC yellow, bottom section with Profile/Settings, user info with role badge and logout
-- Rewrote app-header.tsx: Updated viewTitles with all new views, search bar only for AGENT/ADMIN, notification bell with panel, user dropdown with Profile/Settings/Logout navigation
-- Created notification-panel.tsx: Popover-based notification panel, fetches from /api/notifications, shows icons by type, unread indicators, mark-all-as-read, auto-refresh every 60s
-- Created profile-view.tsx: Full profile page with avatar, role badge, editable name/email, change password (verifies current password then updates), role-specific statistics, account info
-- Created settings-view.tsx: Settings with toggles (email notifications, compact mode), default view select (role-based options), CSV export (own/all tickets), account section with password change link and logout
-- Updated page.tsx: Added ProfileView, SettingsView, my-tickets route using TicketList with myTicketsOnly prop
-- Updated ticket-list.tsx: Added myTicketsOnly prop to filter tickets by current user
-- Updated /api/tickets/route.ts: Added createdById query parameter support
+- Used agent-browser + VLM to visually test every page of the application
+- Tested: Login page, Admin dashboard, User dashboard, Kanban board, Ticket list, Ticket detail, User management, Profile, Settings
+- Identified and fixed the following bugs:
+  1. Stats Cards "Total" showing 100% - Added showPercentage flag, only individual status cards show %
+  2. Profile view duplicate `resolved` key in AGENT stats - Removed duplicate, fixed pending field
+  3. Header Export button navigating to settings - Changed to direct CSV export with loading spinner
+  4. Sidebar NavButton defined inside component (React anti-pattern) - Moved to module scope
+  5. Next.js Image missing `sizes` prop - Added sizes="40px" and sizes="80px"
+  6. Pie chart showing 0% categories causing label overlap - Filter out 0-count categories
+  7. Area chart empty state - Added proper empty state message with icon
+  8. Settings password change button - Added scroll-to-password-section behavior
 
 Stage Summary:
-- Full RBAC sidebar navigation per role (USER/AGENT/ADMIN)
-- Notification panel with real-time fetching and role-based content
-- Profile page with editable fields, password change, and role-specific stats
-- Settings page with notification toggles, appearance, data export, account management
-- All views integrated in page.tsx ViewRenderer
-- Lint: PASS
-- Dev server: compiling and serving correctly
-
----
-Task ID: 1-3
-Agent: SubAgent (RBAC Refactor)
-Task: Refactor backend API and type definitions for RBAC
-
-Work Log:
-- Updated /src/lib/types.ts: expanded AppView to include 'profile', 'settings', 'my-tickets'; added Notification and UserSettings interfaces
-- Updated /src/lib/store.ts: added notifications state with setNotifications, unreadNotificationCount, markNotificationRead, markAllNotificationsRead; added settings state with setSettings, updateSetting; fixed sidebarOpen default to false; logout now resets notifications and settings
-- Updated /src/app/api/tickets/route.ts: added RBAC filtering via userId/role query params (USER=own tickets, AGENT=assigned+unassigned, ADMIN=all); backward compatible when no RBAC params
-- Updated /src/app/api/dashboard/route.ts: added RBAC filtering via userId/role query params; all stats (counts, categories, trends, recent) scoped to user's role
-- Updated /src/app/api/tickets/[id]/route.ts: added hasTicketAccess helper; GET/PUT/DELETE now enforce access control (403 if unauthorized); RBAC params via query string (GET/DELETE) or body (PUT)
-- Updated /src/app/api/notifications/route.ts: proper RBAC-aware notification generation (USER=tickets they own, AGENT=assigned+unassigned, ADMIN=all); uses authorId for own-comment filtering instead of name
-- Updated /src/app/api/export/route.ts: RBAC filtering via buildRbacWhere helper; supports status/priority/categoryId filters; proper AND/OR merging for AGENT role; Spanish status/priority labels in CSV
-
-Stage Summary:
-- 7 files modified/updated with full RBAC support
-- RBAC rules implemented:
-  - USER: can only see/access tickets they created
-  - AGENT: can see/access tickets assigned to them + unassigned tickets
-  - ADMIN: full access to all tickets and features
-- All APIs backward compatible (RBAC only applied when userId/role provided)
-- Lint: PASS
-- Dev server: compiling successfully
+- 8 bugs identified and fixed through visual/functional testing
+- All pages now render correctly with proper data display
+- No lint errors (only 2 unrelated warnings in upload/layout.tsx)
+- Dev server compiling and serving correctly
