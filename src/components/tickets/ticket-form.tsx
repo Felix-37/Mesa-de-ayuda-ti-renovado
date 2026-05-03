@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -76,6 +76,7 @@ export function TicketForm() {
     setEditingTicket,
     categories,
     users,
+    setUsers,
     currentUser,
     addTicket,
     updateTicket,
@@ -84,6 +85,26 @@ export function TicketForm() {
   const isEditing = !!editingTicket
 
   const agents = users.filter((u) => u.role === 'AGENT' || u.role === 'ADMIN')
+
+  // Fetch users if not loaded
+  const fetchUsers = useCallback(async () => {
+    if (users.length > 0) return
+    try {
+      const res = await fetch('/api/users')
+      if (res.ok) {
+        const data = await res.json()
+        setUsers(data)
+      }
+    } catch {
+      // silently fail
+    }
+  }, [users.length, setUsers])
+
+  useEffect(() => {
+    if (ticketFormOpen) {
+      fetchUsers()
+    }
+  }, [ticketFormOpen, fetchUsers])
 
   const form = useForm<TicketFormValues>({
     resolver: zodResolver(ticketFormSchema),
@@ -132,6 +153,8 @@ export function TicketForm() {
           categoryId: values.categoryId,
           priority: values.priority,
           assignedToId: values.assignedToId || null,
+          userId: currentUser?.id,
+          role: currentUser?.role,
         }
         if (values.status) {
           body.status = values.status
@@ -195,6 +218,11 @@ export function TicketForm() {
     }
     setTicketFormOpen(open)
   }
+
+  // Only ADMIN/AGENT can assign tickets
+  const canAssign = currentUser?.role === 'ADMIN' || currentUser?.role === 'AGENT'
+  // Only ADMIN/AGENT can change status on the form
+  const canChangeStatus = isEditing && canAssign
 
   return (
     <Dialog open={ticketFormOpen} onOpenChange={handleOpenChange}>
@@ -304,37 +332,39 @@ export function TicketForm() {
               )}
             />
 
-            {/* Asignar a */}
-            <FormField
-              control={form.control}
-              name="assignedToId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Asignar a (opcional)</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value || undefined}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Sin asignar" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {agents.map((agent) => (
-                        <SelectItem key={agent.id} value={agent.id}>
-                          {agent.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Asignar a - only for ADMIN/AGENT */}
+            {canAssign && (
+              <FormField
+                control={form.control}
+                name="assignedToId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Asignar a (opcional)</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value || undefined}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Sin asignar" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {agents.map((agent) => (
+                          <SelectItem key={agent.id} value={agent.id}>
+                            {agent.name} ({agent.role === 'ADMIN' ? 'Admin' : 'Agente'})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
-            {/* Estado - solo al editar */}
-            {isEditing && (
+            {/* Estado - solo al editar con permisos */}
+            {canChangeStatus && (
               <FormField
                 control={form.control}
                 name="status"

@@ -11,7 +11,7 @@ function hasTicketAccess(
 ): boolean {
   if (role === 'ADMIN') return true;
   if (role === 'AGENT') {
-    return ticket.assignedToId === userId || ticket.assignedToId === null;
+    return ticket.assignedToId === userId || ticket.assignedToId === null || ticket.createdById === userId;
   }
   // USER role — only own tickets
   return ticket.createdById === userId;

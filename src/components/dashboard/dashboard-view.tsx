@@ -101,12 +101,12 @@ export function DashboardView() {
         <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
           Panel de Control
         </h1>
-        <p className="mt-1 text-muted-foreground">
+        <p className="mt-1 text-sm text-muted-foreground">
           {currentUser?.role === 'USER'
-            ? 'Resumen de tus tickets — Mesa de Ayuda TI UNIAJC'
+            ? 'Resumen de tus tickets de soporte'
             : currentUser?.role === 'AGENT'
-            ? 'Resumen de tickets asignados — Mesa de Ayuda TI UNIAJC'
-            : 'Resumen general de la Mesa de Ayuda TI — UNIAJC'}
+            ? 'Resumen de tickets asignados y disponibles'
+            : 'Vista general del sistema de Mesa de Ayuda'}
         </p>
       </div>
 

@@ -9,6 +9,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import {
   LayoutDashboard,
   Columns3,
   Ticket,
@@ -18,6 +23,8 @@ import {
   Settings,
   LogOut,
   X,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
 
 interface NavItem {
@@ -31,7 +38,7 @@ interface NavItem {
 
 const mainNavItems: NavItem[] = [
   {
-    label: 'Dashboard',
+    label: 'Tablero de Gestión',
     icon: <LayoutDashboard className="size-5" />,
     view: 'dashboard',
     roles: ['USER', 'AGENT', 'ADMIN'],
@@ -49,7 +56,7 @@ const mainNavItems: NavItem[] = [
     roles: ['AGENT', 'ADMIN'],
   },
   {
-    label: 'Tickets',
+    label: 'Todos los Tickets',
     icon: <Ticket className="size-5" />,
     view: 'tickets',
     roles: ['AGENT', 'ADMIN'],
@@ -65,7 +72,7 @@ const mainNavItems: NavItem[] = [
 const newTicketItem: NavItem = {
   label: 'Nuevo Ticket',
   icon: <PlusCircle className="size-5" />,
-  view: 'dashboard', // not navigational
+  view: 'dashboard',
   action: 'new-ticket',
   roles: ['USER', 'AGENT', 'ADMIN'],
 }
@@ -108,7 +115,7 @@ export function AppSidebar() {
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case 'ADMIN':
-        return 'bg-uniajc-yellow text-uniajc-blue-dark'
+        return 'bg-accent-yellow-500 text-navy-950'
       case 'AGENT':
         return 'bg-green-500 text-white'
       default:
@@ -122,10 +129,53 @@ export function AppSidebar() {
     } else {
       setCurrentView(item.view)
     }
-    setSidebarOpen(false)
+    // Close sidebar on mobile
+    if (window.innerWidth < 1024) {
+      setSidebarOpen(false)
+    }
   }
 
   const isActive = (view: AppView) => currentView === view
+
+  const NavButton = ({ item }: { item: NavItem }) => {
+    const active = isActive(item.view)
+    const button = (
+      <button
+        onClick={() => handleNavClick(item)}
+        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 group relative ${
+          active
+            ? 'bg-accent-yellow-500 text-navy-950 shadow-md translate-x-1'
+            : 'text-navy-300 hover:bg-navy-800/50 hover:text-white'
+        }`}
+      >
+        <div className={`transition-transform duration-200 group-hover:scale-110 ${
+          active ? 'text-navy-950' : 'text-navy-400 group-hover:text-accent-yellow-400'
+        }`}>
+          {item.icon}
+        </div>
+        <span className="whitespace-nowrap">{item.label}</span>
+        {active && (
+          <div className="absolute left-0 w-1 h-6 bg-navy-950 rounded-r-full -ml-3" />
+        )}
+      </button>
+    )
+
+    // On collapsed sidebar, show tooltip
+    if (!sidebarOpen) {
+      return (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            {button}
+          </TooltipTrigger>
+          <TooltipContent side="right" className="bg-navy-900 border-navy-700 text-white">
+            {item.label}
+          </TooltipContent>
+        </Tooltip>
+      )
+    }
+
+    return button
+  }
 
   return (
     <>
@@ -139,13 +189,13 @@ export function AppSidebar() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-50 h-full bg-uniajc-blue text-white flex flex-col transition-transform duration-300 ease-in-out w-72 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } lg:translate-x-0 lg:static lg:z-auto`}
+        className={`fixed top-0 left-0 z-50 h-full bg-navy-950 text-white flex flex-col transition-all duration-300 ease-in-out sidebar-transition ${
+          sidebarOpen ? 'w-72 translate-x-0' : 'w-16 -translate-x-full lg:translate-x-0 lg:w-16'
+        } lg:static lg:z-auto`}
       >
         {/* Header with Logo */}
-        <div className="flex items-center gap-3 p-4 pb-2">
-          <div className="relative w-10 h-10 shrink-0">
+        <div className="flex items-center gap-3 p-4 pb-2 h-16 border-b border-navy-800/50">
+          <div className="relative w-10 h-10 shrink-0 bg-white rounded-lg p-1 shadow-lg overflow-hidden group-hover:scale-105 transition-transform">
             <Image
               src="/logo.png"
               alt="UNIAJC Logo"
@@ -153,11 +203,13 @@ export function AppSidebar() {
               className="object-contain"
             />
           </div>
-          <div className="flex-1 min-w-0">
-            <h2 className="font-bold text-sm leading-tight truncate">
-              Mesa de Ayuda TI
+          <div className={`flex-1 min-w-0 overflow-hidden transition-all duration-300 ${sidebarOpen ? 'opacity-100' : 'opacity-0 lg:hidden'}`}>
+            <h2 className="font-black text-sm leading-none tracking-tighter text-white uppercase truncate">
+              Mesa de Ayuda
             </h2>
-            <p className="text-xs text-white/60 truncate">UNIAJC</p>
+            <p className="text-[10px] text-accent-yellow-400 font-bold uppercase tracking-[0.2em] mt-0.5">
+              UNIAJC
+            </p>
           </div>
           {/* Close button for mobile */}
           <Button
@@ -168,40 +220,37 @@ export function AppSidebar() {
           >
             <X className="size-5" />
           </Button>
+          {/* Collapse button for desktop */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hidden lg:flex text-navy-400 hover:text-white hover:bg-white/10 shrink-0 h-7 w-7"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+          >
+            {sidebarOpen ? <ChevronLeft className="size-4" /> : <ChevronRight className="size-4" />}
+          </Button>
         </div>
 
-        <Separator className="bg-white/15 mx-4" />
-
         {/* Main Navigation */}
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto custom-scrollbar">
-          {filteredMainItems.map((item) => {
-            const active = isActive(item.view)
-            return (
-              <button
-                key={item.view}
-                onClick={() => handleNavClick(item)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  active
-                    ? 'bg-uniajc-yellow text-uniajc-blue-dark shadow-md'
-                    : 'text-white/80 hover:bg-white/10 hover:text-white'
-                }`}
-              >
-                {item.icon}
-                <span>{item.label}</span>
-              </button>
-            )
-          })}
+        <nav className="flex-1 p-3 space-y-1.5 overflow-y-auto custom-scrollbar mt-2">
+          {filteredMainItems.map((item) => (
+            <NavButton key={item.view} item={item} />
+          ))}
 
           {/* Nuevo Ticket Button */}
           {showNewTicket && (
             <>
-              <Separator className="bg-white/15 my-2" />
+              <Separator className="bg-navy-800/50 my-2" />
               <button
                 onClick={() => handleNavClick(newTicketItem)}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-all duration-200 bg-uniajc-yellow text-uniajc-blue-dark hover:bg-uniajc-yellow-light shadow-md hover:shadow-lg"
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 bg-accent-yellow-500 text-navy-950 hover:bg-accent-yellow-400 shadow-md hover:shadow-lg ${
+                  !sidebarOpen ? 'justify-center lg:justify-center' : ''
+                }`}
               >
-                <PlusCircle className="size-5" />
-                <span>Nuevo Ticket</span>
+                <PlusCircle className="size-5 shrink-0" />
+                <span className={`whitespace-nowrap ${!sidebarOpen ? 'hidden lg:hidden' : ''}`}>
+                  Nuevo Ticket
+                </span>
               </button>
             </>
           )}
@@ -209,41 +258,27 @@ export function AppSidebar() {
 
         {/* Bottom Navigation - Profile & Settings */}
         <div className="px-3 pb-1">
-          <Separator className="bg-white/15" />
+          <Separator className="bg-navy-800/50" />
           <div className="pt-2 space-y-1">
-            {filteredBottomItems.map((item) => {
-              const active = isActive(item.view)
-              return (
-                <button
-                  key={item.view}
-                  onClick={() => handleNavClick(item)}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                    active
-                      ? 'bg-uniajc-yellow text-uniajc-blue-dark shadow-md'
-                      : 'text-white/70 hover:bg-white/10 hover:text-white'
-                  }`}
-                >
-                  {item.icon}
-                  <span>{item.label}</span>
-                </button>
-              )
-            })}
+            {filteredBottomItems.map((item) => (
+              <NavButton key={item.view} item={item} />
+            ))}
           </div>
         </div>
 
         {/* User Section */}
         <div className="p-4 pt-2 space-y-3">
-          <Separator className="bg-white/15" />
+          <Separator className="bg-navy-800/50" />
           <div className="flex items-center gap-3 pt-2">
-            <Avatar className="size-10 border-2 border-uniajc-yellow">
+            <Avatar className="size-10 border-2 border-accent-yellow-500 shrink-0">
               {currentUser.avatar && (
                 <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
               )}
-              <AvatarFallback className="bg-uniajc-blue-light text-white text-sm font-semibold">
+              <AvatarFallback className="bg-navy-800 text-white text-sm font-semibold">
                 {userInitials}
               </AvatarFallback>
             </Avatar>
-            <div className="flex-1 min-w-0">
+            <div className={`flex-1 min-w-0 overflow-hidden transition-all duration-300 ${sidebarOpen ? 'opacity-100' : 'opacity-0 lg:hidden'}`}>
               <p className="text-sm font-medium text-white truncate">
                 {currentUser.name}
               </p>
@@ -256,12 +291,24 @@ export function AppSidebar() {
           </div>
           <Button
             variant="ghost"
-            className="w-full justify-start gap-2 text-white/70 hover:text-white hover:bg-white/10"
+            className={`w-full justify-start gap-2 text-white/70 hover:text-white hover:bg-white/10 ${!sidebarOpen ? 'px-0 lg:px-0' : ''}`}
             onClick={logout}
           >
-            <LogOut className="size-4" />
-            Cerrar Sesión
+            <LogOut className="size-4 shrink-0" />
+            <span className={`${!sidebarOpen ? 'hidden lg:hidden' : ''}`}>
+              Cerrar Sesión
+            </span>
           </Button>
+        </div>
+
+        {/* Version info */}
+        <div className="p-3 border-t border-navy-800/50">
+          <div className={`flex flex-col gap-1 items-center justify-center opacity-40 hover:opacity-100 transition-opacity ${sidebarOpen ? '' : 'lg:hidden'}`}>
+            <span className="text-[9px] font-bold text-navy-400 uppercase tracking-widest text-center">
+              Proyecto Mesa de Ayuda
+            </span>
+            <span className="text-[8px] text-navy-500 font-medium">v2.0.0-uniajc</span>
+          </div>
         </div>
       </aside>
     </>

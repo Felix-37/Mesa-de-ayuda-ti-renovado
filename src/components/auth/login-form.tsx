@@ -101,12 +101,18 @@ export function LoginForm() {
     }
   }
 
+  const demoCredentials = [
+    { label: 'Admin', email: 'admin@uniajc.edu.co', role: 'ADMIN' },
+    { label: 'Agente', email: 'agente@uniajc.edu.co', role: 'AGENT' },
+    { label: 'Usuario', email: 'usuario@uniajc.edu.co', role: 'USER' },
+  ]
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-uniajc-blue via-uniajc-blue-dark to-uniajc-blue p-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-navy-950 via-navy-900 to-uniajc-blue p-4 relative overflow-hidden">
       {/* Decorative background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-uniajc-yellow/10 blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-uniajc-yellow/10 blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-accent-yellow-500/10 blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-accent-yellow-500/10 blur-3xl" />
         <div className="absolute top-1/4 left-1/4 w-40 h-40 rounded-full bg-white/5 blur-2xl" />
       </div>
 
@@ -126,10 +132,10 @@ export function LoginForm() {
           </div>
 
           <div>
-            <CardTitle className="text-2xl font-bold text-uniajc-blue">
+            <CardTitle className="text-2xl font-black text-navy-900 tracking-tight">
               Mesa de Ayuda TI
             </CardTitle>
-            <CardDescription className="text-muted-foreground mt-1">
+            <CardDescription className="text-muted-foreground mt-1 text-sm">
               Universidad Antonio José Camacho
             </CardDescription>
           </div>
@@ -139,9 +145,9 @@ export function LoginForm() {
             <button
               type="button"
               onClick={() => handleModeToggle('login')}
-              className={`flex-1 rounded-md py-2 text-sm font-medium transition-all ${
+              className={`flex-1 rounded-md py-2 text-sm font-bold transition-all ${
                 mode === 'login'
-                  ? 'bg-white text-uniajc-blue shadow-sm'
+                  ? 'bg-white text-navy-900 shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
@@ -150,9 +156,9 @@ export function LoginForm() {
             <button
               type="button"
               onClick={() => handleModeToggle('register')}
-              className={`flex-1 rounded-md py-2 text-sm font-medium transition-all ${
+              className={`flex-1 rounded-md py-2 text-sm font-bold transition-all ${
                 mode === 'register'
-                  ? 'bg-white text-uniajc-blue shadow-sm'
+                  ? 'bg-white text-navy-900 shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
@@ -274,7 +280,7 @@ export function LoginForm() {
             {/* Submit Button */}
             <Button
               type="submit"
-              className="w-full bg-uniajc-blue hover:bg-uniajc-blue-light text-white h-11 text-base font-semibold"
+              className="w-full bg-navy-900 hover:bg-navy-800 text-white h-11 text-base font-bold"
               disabled={loading}
             >
               {loading ? (
@@ -288,11 +294,30 @@ export function LoginForm() {
             </Button>
 
             {/* Demo credentials hint */}
-            <div className="text-center text-xs text-muted-foreground space-y-1 pt-2 border-t">
-              <p className="font-medium text-uniajc-blue">Credenciales de prueba:</p>
-              <p>Admin: admin@uniajc.edu.co / 123456</p>
-              <p>Agente: agente@uniajc.edu.co / 123456</p>
-              <p>Usuario: usuario@uniajc.edu.co / 123456</p>
+            <div className="text-center text-xs text-muted-foreground space-y-2 pt-3 border-t">
+              <p className="font-bold text-navy-800 uppercase tracking-wider text-[10px]">
+                Credenciales de prueba
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                {demoCredentials.map((cred) => (
+                  <button
+                    key={cred.email}
+                    type="button"
+                    onClick={() => {
+                      setEmail(cred.email)
+                      setPassword('123456')
+                      setMode('login')
+                    }}
+                    className="rounded-lg border p-2 hover:bg-muted transition-colors text-center"
+                  >
+                    <p className="font-bold text-[10px] text-navy-900">{cred.label}</p>
+                    <p className="text-[9px] text-muted-foreground mt-0.5 truncate">{cred.email}</p>
+                  </button>
+                ))}
+              </div>
+              <p className="text-[10px] text-muted-foreground/70 mt-1">
+                Contraseña: 123456
+              </p>
             </div>
           </form>
         </CardContent>

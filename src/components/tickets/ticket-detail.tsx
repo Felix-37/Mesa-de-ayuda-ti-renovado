@@ -167,9 +167,13 @@ export function TicketDetail() {
     setTicketFormOpen(true)
   }
 
-  // Go back
+  // Go back - determine the correct view based on role
   const handleBack = () => {
-    setCurrentView('tickets')
+    if (currentUser?.role === 'USER') {
+      setCurrentView('my-tickets')
+    } else {
+      setCurrentView('tickets')
+    }
   }
 
   // ── Loading skeleton ──────────────────────────────────────
@@ -198,7 +202,7 @@ export function TicketDetail() {
         <p className="text-muted-foreground text-lg">Ticket no encontrado</p>
         <Button variant="outline" onClick={handleBack}>
           <ArrowLeft className="mr-2 size-4" />
-          Volver a tickets
+          Volver
         </Button>
       </div>
     )
@@ -234,10 +238,13 @@ export function TicketDetail() {
             </div>
           </div>
         </div>
-        <Button variant="outline" onClick={handleEdit} className="shrink-0">
-          <Edit3 className="mr-2 size-4" />
-          Editar
-        </Button>
+        {/* Edit button - only for ADMIN/AGENT or ticket creator */}
+        {(currentUser?.role === 'ADMIN' || currentUser?.role === 'AGENT' || ticket.createdById === currentUser?.id) && (
+          <Button variant="outline" onClick={handleEdit} className="shrink-0">
+            <Edit3 className="mr-2 size-4" />
+            Editar
+          </Button>
+        )}
       </div>
 
       {/* Badges row */}
@@ -340,7 +347,8 @@ export function TicketDetail() {
         </div>
       </div>
 
-      {/* Status change buttons */}
+      {/* Status change buttons - only for ADMIN/AGENT */}
+      {(currentUser?.role === 'ADMIN' || currentUser?.role === 'AGENT') && (
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Cambiar Estado</CardTitle>
@@ -371,6 +379,7 @@ export function TicketDetail() {
           </div>
         </CardContent>
       </Card>
+      )}
 
       <Separator />
 

@@ -12,6 +12,7 @@ import { TicketForm } from '@/components/tickets/ticket-form'
 import { UserList } from '@/components/users/user-list'
 import { ProfileView } from '@/components/profile/profile-view'
 import { SettingsView } from '@/components/settings/settings-view'
+import { TooltipProvider } from '@/components/ui/tooltip'
 
 function ViewRenderer() {
   const currentView = useAppStore((s) => s.currentView)
@@ -46,15 +47,17 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen flex bg-background">
-      <AppSidebar />
-      <div className="flex-1 flex flex-col min-w-0">
-        <AppHeader />
-        <main className="flex-1 overflow-auto">
-          <ViewRenderer />
-        </main>
+    <TooltipProvider>
+      <div className="min-h-screen flex bg-background">
+        <AppSidebar />
+        <div className="flex-1 flex flex-col min-w-0">
+          <AppHeader />
+          <main className="flex-1 overflow-auto p-4 md:p-6">
+            <ViewRenderer />
+          </main>
+        </div>
+        <TicketForm />
       </div>
-      <TicketForm />
-    </div>
+    </TooltipProvider>
   )
 }

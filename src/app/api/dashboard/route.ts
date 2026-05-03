@@ -13,6 +13,7 @@ function buildRbacWhere(userId: string, role: string): Record<string, unknown> {
       OR: [
         { assignedToId: userId },
         { assignedToId: null },
+        { createdById: userId },
       ],
     };
   }

@@ -13,6 +13,7 @@ function buildRbacWhere(userId: string, role: string): Record<string, unknown> {
       OR: [
         { assignedToId: userId },
         { assignedToId: null },
+        { createdById: userId },
       ],
     };
   }
@@ -126,12 +127,13 @@ export async function GET(request: NextRequest) {
         }
       }
     } else if (role === 'AGENT') {
-      // For AGENT: notifications about assigned + unassigned tickets
+      // For AGENT: notifications about assigned + unassigned + own created tickets
       const agentTickets = await db.ticket.findMany({
         where: {
           OR: [
             { assignedToId: userId },
             { assignedToId: null },
+            { createdById: userId },
           ],
         },
         select: {
