@@ -98,7 +98,7 @@ export function NotificationPanel() {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-80 sm:w-96 p-0 overflow-hidden">
+      <PopoverContent align="end" className="w-80 sm:w-96 p-0">
         <div className="flex items-center justify-between px-4 py-3">
           <h3 className="font-semibold text-sm">Notificaciones</h3>
           {unreadCount > 0 && (
@@ -114,52 +114,50 @@ export function NotificationPanel() {
           )}
         </div>
         <Separator />
-        <div className="overflow-hidden" style={{ maxHeight: '24rem' }}>
-          <ScrollArea className="h-full" style={{ maxHeight: '24rem' }}>
-            {loading && notifications.length === 0 ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="size-6 border-2 border-uniajc-blue border-t-transparent rounded-full animate-spin" />
-              </div>
-            ) : notifications.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
-                <Bell className="size-8 mb-2 opacity-40" />
-                <p className="text-sm">No hay notificaciones</p>
-              </div>
-            ) : (
-              <div className="divide-y">
-                {notifications.map((notification) => (
-                  <button
-                    key={notification.id}
-                    onClick={() => handleNotificationClick(notification)}
-                    className={`w-full text-left px-4 py-3 hover:bg-muted/50 transition-colors flex gap-3 ${
-                      !notification.read ? 'bg-blue-50/50' : ''
-                    }`}
-                  >
-                    <div className="shrink-0 mt-0.5">
-                      {getNotificationIcon(notification.type)}
-                    </div>
-                    <div className="flex-1 min-w-0 overflow-hidden">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="text-sm font-medium leading-tight truncate">
-                          {notification.title}
-                        </p>
-                        {!notification.read && (
-                          <span className="size-2 rounded-full bg-blue-500 shrink-0 mt-1.5" />
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 break-words">
-                        {notification.message}
+        <ScrollArea className="max-h-[24rem]">
+          {loading && notifications.length === 0 ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="size-6 border-2 border-uniajc-blue border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : notifications.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+              <Bell className="size-8 mb-2 opacity-40" />
+              <p className="text-sm">No hay notificaciones</p>
+            </div>
+          ) : (
+            <div className="divide-y">
+              {notifications.map((notification) => (
+                <button
+                  key={notification.id}
+                  onClick={() => handleNotificationClick(notification)}
+                  className={`w-full text-left px-4 py-3 hover:bg-muted/50 transition-colors flex gap-3 ${
+                    !notification.read ? 'bg-blue-50/50' : ''
+                  }`}
+                >
+                  <div className="shrink-0 mt-0.5">
+                    {getNotificationIcon(notification.type)}
+                  </div>
+                  <div className="flex-1 min-w-0 overflow-hidden">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-sm font-medium leading-tight truncate">
+                        {notification.title}
                       </p>
-                      <p className="text-[10px] text-muted-foreground/70 mt-1">
-                        {timeAgo(notification.createdAt)}
-                      </p>
+                      {!notification.read && (
+                        <span className="size-2 rounded-full bg-blue-500 shrink-0 mt-1.5" />
+                      )}
                     </div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </ScrollArea>
-        </div>
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 break-words">
+                      {notification.message}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground/70 mt-1">
+                      {timeAgo(notification.createdAt)}
+                    </p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </ScrollArea>
       </PopoverContent>
     </Popover>
   )

@@ -48,9 +48,9 @@ export default function Home() {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen flex bg-background">
+      <div className="h-screen flex bg-background overflow-hidden">
         <AppSidebar />
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-w-0 min-h-0">
           <AppHeader />
           <main className="flex-1 overflow-auto p-4 md:p-6">
             <ViewRenderer />

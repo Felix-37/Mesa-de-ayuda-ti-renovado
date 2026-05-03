@@ -204,7 +204,7 @@ export function AppSidebar() {
       <aside
         className={`fixed top-0 left-0 z-50 h-full bg-navy-950 text-white flex flex-col transition-all duration-300 ease-in-out sidebar-transition ${
           sidebarOpen ? 'w-72 translate-x-0' : 'w-20 -translate-x-full lg:translate-x-0 lg:w-20'
-        } lg:static lg:z-auto`}
+        } lg:static lg:z-auto lg:h-screen lg:sticky lg:top-0`}
       >
         {/* Header with Logo */}
         <div className="relative flex items-center gap-3 p-4 pb-2 h-16 border-b border-navy-800/50">
