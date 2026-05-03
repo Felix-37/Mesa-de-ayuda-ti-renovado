@@ -5,7 +5,6 @@ import { useAppStore } from '@/lib/store'
 import type { Notification } from '@/lib/types'
 import { timeAgo } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import {
   Popover,
@@ -68,7 +67,6 @@ export function NotificationPanel() {
   useEffect(() => {
     if (currentUser) {
       fetchNotifications()
-      // Refresh every 60 seconds
       const interval = setInterval(fetchNotifications, 60000)
       return () => clearInterval(interval)
     }
@@ -98,8 +96,13 @@ export function NotificationPanel() {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-80 sm:w-96 p-0">
-        <div className="flex items-center justify-between px-4 py-3">
+      <PopoverContent
+        align="end"
+        className="w-80 sm:w-96 p-0 overflow-hidden flex flex-col"
+        style={{ maxHeight: 'min(24rem, 80vh)' }}
+      >
+        {/* Fixed header */}
+        <div className="flex items-center justify-between px-4 py-3 shrink-0">
           <h3 className="font-semibold text-sm">Notificaciones</h3>
           {unreadCount > 0 && (
             <Button
@@ -113,8 +116,9 @@ export function NotificationPanel() {
             </Button>
           )}
         </div>
-        <Separator />
-        <ScrollArea className="max-h-[24rem]">
+        <Separator className="shrink-0" />
+        {/* Scrollable list — native scroll for reliable mouse wheel */}
+        <div className="overflow-y-auto flex-1" style={{ WebkitOverflowScrolling: 'touch' }}>
           {loading && notifications.length === 0 ? (
             <div className="flex items-center justify-center py-8">
               <div className="size-6 border-2 border-uniajc-blue border-t-transparent rounded-full animate-spin" />
@@ -157,7 +161,7 @@ export function NotificationPanel() {
               ))}
             </div>
           )}
-        </ScrollArea>
+        </div>
       </PopoverContent>
     </Popover>
   )
