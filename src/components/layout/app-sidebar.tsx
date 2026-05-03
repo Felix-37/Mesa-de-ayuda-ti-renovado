@@ -41,12 +41,12 @@ const mainNavItems: NavItem[] = [
     label: 'Tablero de Gestión',
     icon: <LayoutDashboard className="size-5" />,
     view: 'dashboard',
-    roles: ['USER', 'AGENT', 'ADMIN'],
+    roles: ['AGENT', 'ADMIN'],
   },
   {
-    label: 'Mis Tickets',
-    icon: <Ticket className="size-5" />,
-    view: 'my-tickets',
+    label: 'Mi Tablero',
+    icon: <Columns3 className="size-5" />,
+    view: 'kanban',
     roles: ['USER'],
   },
   {

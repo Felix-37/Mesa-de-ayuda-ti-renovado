@@ -40,6 +40,11 @@ const viewTitles: Record<AppView, string> = {
   settings: 'Configuración',
 }
 
+function getViewTitle(view: AppView, role?: string): string {
+  if (view === 'kanban' && role === 'USER') return 'Mi Tablero'
+  return viewTitles[view]
+}
+
 export function AppHeader() {
   const {
     currentUser,
@@ -91,7 +96,7 @@ export function AppHeader() {
 
         {/* Current view title */}
         <h1 className="text-lg font-bold text-navy-900 hidden sm:block">
-          {viewTitles[currentView]}
+          {getViewTitle(currentView, currentUser?.role)}
         </h1>
 
         {/* Spacer */}

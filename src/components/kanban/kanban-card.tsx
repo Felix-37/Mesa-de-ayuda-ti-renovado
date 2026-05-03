@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge'
 interface KanbanCardProps {
   ticket: Ticket
   overlay?: boolean
+  readOnly?: boolean
 }
 
 const priorityDotColors: Record<string, string> = {
@@ -103,7 +104,7 @@ function CardContent({ ticket }: { ticket: Ticket }) {
   )
 }
 
-export function KanbanCard({ ticket, overlay }: KanbanCardProps) {
+export function KanbanCard({ ticket, overlay, readOnly }: KanbanCardProps) {
   const { setSelectedTicketId, setCurrentView } = useAppStore()
 
   const {
@@ -119,7 +120,7 @@ export function KanbanCard({ ticket, overlay }: KanbanCardProps) {
       ticket,
       status: ticket.status,
     },
-    disabled: overlay,
+    disabled: overlay || readOnly,
   })
 
   const style = {
@@ -142,12 +143,35 @@ export function KanbanCard({ ticket, overlay }: KanbanCardProps) {
     )
   }
 
+  // Read-only card: no drag listeners, just click to view
+  if (readOnly) {
+    return (
+      <Card
+        className={cn(
+          'cursor-pointer rounded-lg border bg-card p-3 shadow-sm transition-all duration-200',
+          'hover:-translate-y-0.5 hover:shadow-md',
+        )}
+        onClick={handleClick}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            handleClick()
+          }
+        }}
+      >
+        <CardContent ticket={ticket} />
+      </Card>
+    )
+  }
+
   return (
     <Card
       ref={setNodeRef}
       style={style}
       className={cn(
-        'cursor-pointer rounded-lg border bg-card p-3 shadow-sm transition-all duration-200',
+        'cursor-grab rounded-lg border bg-card p-3 shadow-sm transition-all duration-200',
         'hover:-translate-y-0.5 hover:shadow-md',
         isDragging && 'z-50 opacity-30',
       )}

@@ -14,7 +14,7 @@ import {
   type DragOverEvent,
 } from '@dnd-kit/core'
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
-import { Plus, Search, Filter } from 'lucide-react'
+import { Plus, Search, Filter, Eye } from 'lucide-react'
 import type { Ticket, TicketStatus, TicketPriority, Category } from '@/lib/types'
 import { useAppStore } from '@/lib/store'
 import { cn, getPriorityLabel } from '@/lib/utils'
@@ -65,6 +65,8 @@ export function KanbanBoard() {
   const [activeTicket, setActiveTicket] = useState<Ticket | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
+  const isReadOnly = currentUser?.role === 'USER'
+
   // Fetch tickets on mount with RBAC
   useEffect(() => {
     async function fetchTickets() {
@@ -102,7 +104,7 @@ export function KanbanBoard() {
     fetchCategories()
   }, [setTickets, setCategories, currentUser])
 
-  // Sensors
+  // Sensors — only for ADMIN/AGENT (not for read-only USER)
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -137,7 +139,7 @@ export function KanbanBoard() {
     {} as Record<TicketStatus, Ticket[]>,
   )
 
-  // Drag handlers
+  // Drag handlers — only used by ADMIN/AGENT
   const handleDragStart = useCallback(
     (event: DragStartEvent) => {
       const { active } = event
@@ -157,44 +159,6 @@ export function KanbanBoard() {
       const activeId = active.id as string
       const overId = over.id as string
 
-      // Find the target status
-      let targetStatus: TicketStatus | null = null
-
-      // If over a column (droppable area with status)
-      if (COLUMNS.some((col) => col.status === overId)) {
-        targetStatus = overId as TicketStatus
-      }
-      // If over another ticket, find its status
-      else {
-        const overTicket = tickets.find((t) => t.id === overId)
-        if (overTicket) {
-          targetStatus = overTicket.status
-        }
-      }
-
-      if (!targetStatus) return
-
-      // Find the active ticket
-      const activeTicket = tickets.find((t) => t.id === activeId)
-      if (!activeTicket || activeTicket.status === targetStatus) return
-
-      // Optimistically update the store
-      updateTicket(activeId, { status: targetStatus })
-    },
-    [tickets, updateTicket],
-  )
-
-  const handleDragEnd = useCallback(
-    async (event: DragEndEvent) => {
-      const { active, over } = event
-      setActiveTicket(null)
-
-      if (!over) return
-
-      const activeId = active.id as string
-      const overId = over.id as string
-
-      // Determine target status
       let targetStatus: TicketStatus | null = null
 
       if (COLUMNS.some((col) => col.status === overId)) {
@@ -211,7 +175,37 @@ export function KanbanBoard() {
       const activeTicket = tickets.find((t) => t.id === activeId)
       if (!activeTicket || activeTicket.status === targetStatus) return
 
-      // Update via API
+      updateTicket(activeId, { status: targetStatus })
+    },
+    [tickets, updateTicket],
+  )
+
+  const handleDragEnd = useCallback(
+    async (event: DragEndEvent) => {
+      const { active, over } = event
+      setActiveTicket(null)
+
+      if (!over) return
+
+      const activeId = active.id as string
+      const overId = over.id as string
+
+      let targetStatus: TicketStatus | null = null
+
+      if (COLUMNS.some((col) => col.status === overId)) {
+        targetStatus = overId as TicketStatus
+      } else {
+        const overTicket = tickets.find((t) => t.id === overId)
+        if (overTicket) {
+          targetStatus = overTicket.status
+        }
+      }
+
+      if (!targetStatus) return
+
+      const activeTicket = tickets.find((t) => t.id === activeId)
+      if (!activeTicket || activeTicket.status === targetStatus) return
+
       try {
         const res = await fetch(`/api/tickets/${activeId}?userId=${currentUser?.id}&role=${currentUser?.role}`, {
           method: 'PUT',
@@ -220,12 +214,10 @@ export function KanbanBoard() {
         })
 
         if (!res.ok) {
-          // Revert on failure
           updateTicket(activeId, { status: activeTicket.status })
           console.error('Failed to update ticket status')
         }
       } catch (error) {
-        // Revert on failure
         updateTicket(activeId, { status: activeTicket.status })
         console.error('Error updating ticket status:', error)
       }
@@ -237,6 +229,139 @@ export function KanbanBoard() {
     setActiveTicket(null)
   }, [])
 
+  // Read-only board content (for USER role)
+  if (isReadOnly) {
+    return (
+      <div className="flex h-full flex-col gap-4">
+        {/* Header with filters */}
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Eye className="size-5 text-muted-foreground" />
+              <h2 className="text-xl font-bold text-foreground">
+                Mi Tablero
+              </h2>
+            </div>
+            <Button
+              onClick={() => setTicketFormOpen(true)}
+              className="gap-1.5 bg-[#1a3f7a] text-white hover:bg-[#1a3f7a]/90"
+            >
+              <Plus className="size-4" />
+              Nuevo Ticket
+            </Button>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Aquí puedes ver el estado de tus tickets. Arrastra y suelta no está disponible — contacta a un agente para cambios.
+          </p>
+
+          {/* Filter bar */}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative flex-1 min-w-[180px] max-w-[300px]">
+              <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Buscar mis tickets..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 h-8 text-sm"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Filter className="size-4 text-muted-foreground" />
+
+              <Select
+                value={priorityFilter}
+                onValueChange={(val) =>
+                  setPriorityFilter(val as TicketPriority | 'ALL')
+                }
+              >
+                <SelectTrigger className="h-8 w-[130px] text-xs">
+                  <SelectValue placeholder="Prioridad" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">Todas</SelectItem>
+                  {PRIORITIES.map((p) => (
+                    <SelectItem key={p.value} value={p.value}>
+                      {p.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={categoryFilter}
+                onValueChange={(val) => setCategoryFilter(val)}
+              >
+                <SelectTrigger className="h-8 w-[140px] text-xs">
+                  <SelectValue placeholder="Categoría" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">Todas</SelectItem>
+                  {categories.map((cat: Category) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {(priorityFilter !== 'ALL' ||
+              categoryFilter !== 'ALL' ||
+              searchQuery) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 text-xs text-muted-foreground"
+                onClick={() => {
+                  setPriorityFilter('ALL')
+                  setCategoryFilter('ALL')
+                  setSearchQuery('')
+                }}
+              >
+                Limpiar filtros
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Read-only Kanban columns — no DndContext */}
+        <ScrollArea className="flex-1" orientation="horizontal">
+          <div className="flex gap-4 pb-4">
+            {isLoading ? (
+              COLUMNS.map((col) => (
+                <div
+                  key={col.status}
+                  className="flex w-[280px] min-w-[280px] flex-col rounded-xl border bg-muted/30 p-4 sm:w-[300px] sm:min-w-[300px]"
+                >
+                  <div className="mb-3 h-4 w-24 animate-pulse rounded bg-muted" />
+                  <div className="flex flex-col gap-2">
+                    {[1, 2].map((i) => (
+                      <div
+                        key={i}
+                        className="h-24 animate-pulse rounded-lg bg-muted"
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))
+            ) : (
+              COLUMNS.map((col) => (
+                <KanbanColumn
+                  key={col.status}
+                  status={col.status}
+                  tickets={ticketsByStatus[col.status]}
+                  readOnly
+                />
+              ))
+            )}
+          </div>
+        </ScrollArea>
+      </div>
+    )
+  }
+
+  // Drag-enabled board content (for ADMIN/AGENT)
   return (
     <div className="flex h-full flex-col gap-4">
       {/* Header with filters */}
@@ -325,7 +450,7 @@ export function KanbanBoard() {
         </div>
       </div>
 
-      {/* Kanban board columns */}
+      {/* Kanban board columns with drag */}
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
@@ -337,7 +462,6 @@ export function KanbanBoard() {
         <ScrollArea className="flex-1" orientation="horizontal">
           <div className="flex gap-4 pb-4">
             {isLoading ? (
-              // Loading skeleton
               COLUMNS.map((col) => (
                 <div
                   key={col.status}

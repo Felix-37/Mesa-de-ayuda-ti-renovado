@@ -170,7 +170,7 @@ export function TicketDetail() {
   // Go back - determine the correct view based on role
   const handleBack = () => {
     if (currentUser?.role === 'USER') {
-      setCurrentView('my-tickets')
+      setCurrentView('kanban')
     } else {
       setCurrentView('tickets')
     }

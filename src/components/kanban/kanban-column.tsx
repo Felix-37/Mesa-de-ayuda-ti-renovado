@@ -11,6 +11,7 @@ import { KanbanCard } from './kanban-card'
 interface KanbanColumnProps {
   status: TicketStatus
   tickets: Ticket[]
+  readOnly?: boolean
 }
 
 const statusColors: Record<TicketStatus, string> = {
@@ -27,12 +28,13 @@ const statusBgColors: Record<TicketStatus, string> = {
   CLOSED: 'bg-gray-50 dark:bg-gray-900/30',
 }
 
-export function KanbanColumn({ status, tickets }: KanbanColumnProps) {
+export function KanbanColumn({ status, tickets, readOnly = false }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: status,
     data: {
       status,
     },
+    disabled: readOnly,
   })
 
   const ticketIds = tickets.map((t) => t.id)
@@ -41,7 +43,7 @@ export function KanbanColumn({ status, tickets }: KanbanColumnProps) {
     <div
       className={cn(
         'flex w-[280px] min-w-[280px] flex-shrink-0 flex-col rounded-xl border bg-muted/30 sm:w-[300px] sm:min-w-[300px]',
-        isOver && 'ring-2 ring-[#1a3f7a]/40',
+        !readOnly && isOver && 'ring-2 ring-[#1a3f7a]/40',
       )}
     >
       {/* Column header */}
@@ -74,23 +76,38 @@ export function KanbanColumn({ status, tickets }: KanbanColumnProps) {
       {/* Cards area */}
       <ScrollArea className="flex-1">
         <div ref={setNodeRef} className="min-h-[120px] p-2">
-          <SortableContext
-            items={ticketIds}
-            strategy={verticalListSortingStrategy}
-          >
+          {readOnly ? (
+            // Read-only: no SortableContext, just render cards
             <div className="flex flex-col gap-2">
               {tickets.map((ticket) => (
-                <KanbanCard key={ticket.id} ticket={ticket} />
+                <KanbanCard key={ticket.id} ticket={ticket} readOnly />
               ))}
+              {tickets.length === 0 && (
+                <div className="flex flex-col items-center justify-center gap-2 py-8 text-muted-foreground">
+                  <Inbox className="size-8 opacity-40" />
+                  <p className="text-xs">Sin tickets</p>
+                </div>
+              )}
             </div>
-
-            {tickets.length === 0 && (
-              <div className="flex flex-col items-center justify-center gap-2 py-8 text-muted-foreground">
-                <Inbox className="size-8 opacity-40" />
-                <p className="text-xs">Sin tickets</p>
+          ) : (
+            <SortableContext
+              items={ticketIds}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="flex flex-col gap-2">
+                {tickets.map((ticket) => (
+                  <KanbanCard key={ticket.id} ticket={ticket} />
+                ))}
               </div>
-            )}
-          </SortableContext>
+
+              {tickets.length === 0 && (
+                <div className="flex flex-col items-center justify-center gap-2 py-8 text-muted-foreground">
+                  <Inbox className="size-8 opacity-40" />
+                  <p className="text-xs">Sin tickets</p>
+                </div>
+              )}
+            </SortableContext>
+          )}
         </div>
       </ScrollArea>
     </div>

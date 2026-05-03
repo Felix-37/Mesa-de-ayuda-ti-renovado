@@ -84,7 +84,11 @@ export const useAppStore = create<AppState>((set, get) => ({
   // Auth
   currentUser: null,
   isAuthenticated: false,
-  login: (user) => set({ currentUser: user, isAuthenticated: true }),
+  login: (user) => set({
+    currentUser: user,
+    isAuthenticated: true,
+    currentView: user.role === 'USER' ? 'kanban' : 'dashboard',
+  }),
   logout: () =>
     set({
       currentUser: null,
