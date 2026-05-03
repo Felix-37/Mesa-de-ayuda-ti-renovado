@@ -291,8 +291,8 @@ export function LoginForm() {
             <div className="text-center text-xs text-muted-foreground space-y-1 pt-2 border-t">
               <p className="font-medium text-uniajc-blue">Credenciales de prueba:</p>
               <p>Admin: admin@uniajc.edu.co / 123456</p>
-              <p>Agente: agente1@uniajc.edu.co / 123456</p>
-              <p>Usuario: usuario1@uniajc.edu.co / 123456</p>
+              <p>Agente: agente@uniajc.edu.co / 123456</p>
+              <p>Usuario: usuario@uniajc.edu.co / 123456</p>
             </div>
           </form>
         </CardContent>
