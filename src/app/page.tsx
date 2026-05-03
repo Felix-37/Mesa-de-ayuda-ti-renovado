@@ -10,6 +10,8 @@ import { TicketList } from '@/components/tickets/ticket-list'
 import { TicketDetail } from '@/components/tickets/ticket-detail'
 import { TicketForm } from '@/components/tickets/ticket-form'
 import { UserList } from '@/components/users/user-list'
+import { ProfileView } from '@/components/profile/profile-view'
+import { SettingsView } from '@/components/settings/settings-view'
 
 function ViewRenderer() {
   const currentView = useAppStore((s) => s.currentView)
@@ -21,10 +23,16 @@ function ViewRenderer() {
       return <KanbanBoard />
     case 'tickets':
       return <TicketList />
+    case 'my-tickets':
+      return <TicketList myTicketsOnly />
     case 'ticket-detail':
       return <TicketDetail />
     case 'users':
       return <UserList />
+    case 'profile':
+      return <ProfileView />
+    case 'settings':
+      return <SettingsView />
     default:
       return <DashboardView />
   }

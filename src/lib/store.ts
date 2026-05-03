@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { User, Ticket, Category, AppView, TicketStatus } from './types'
+import type { User, Ticket, Category, AppView, TicketStatus, UserSettings, Notification } from './types'
 
 interface AppState {
   // Auth
@@ -48,9 +48,39 @@ interface AppState {
   setTicketFormOpen: (open: boolean) => void
   editingTicket: Ticket | null
   setEditingTicket: (ticket: Ticket | null) => void
+
+  // Settings
+  settings: UserSettings
+  setSettings: (settings: Partial<UserSettings>) => void
+
+  // Notifications
+  notifications: Notification[]
+  setNotifications: (notifications: Notification[]) => void
+  markNotificationRead: (id: string) => void
+  markAllNotificationsRead: () => void
+  unreadCount: number
 }
 
-export const useAppStore = create<AppState>((set) => ({
+const defaultSettings: UserSettings = {
+  emailNotifications: true,
+  compactMode: false,
+  defaultView: 'dashboard',
+}
+
+function loadSettings(): UserSettings {
+  if (typeof window === 'undefined') return defaultSettings
+  try {
+    const saved = localStorage.getItem('uniajc-settings')
+    if (saved) {
+      return { ...defaultSettings, ...JSON.parse(saved) }
+    }
+  } catch {
+    // ignore
+  }
+  return defaultSettings
+}
+
+export const useAppStore = create<AppState>((set, get) => ({
   // Auth
   currentUser: null,
   isAuthenticated: false,
@@ -61,6 +91,7 @@ export const useAppStore = create<AppState>((set) => ({
       isAuthenticated: false,
       currentView: 'dashboard',
       selectedTicketId: null,
+      notifications: [],
     }),
 
   // Navigation
@@ -109,4 +140,31 @@ export const useAppStore = create<AppState>((set) => ({
   setTicketFormOpen: (open) => set({ ticketFormOpen: open }),
   editingTicket: null,
   setEditingTicket: (ticket) => set({ editingTicket: ticket }),
+
+  // Settings
+  settings: loadSettings(),
+  setSettings: (partial) => {
+    const newSettings = { ...get().settings, ...partial }
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('uniajc-settings', JSON.stringify(newSettings))
+    }
+    set({ settings: newSettings })
+  },
+
+  // Notifications
+  notifications: [],
+  setNotifications: (notifications) => set({ notifications }),
+  markNotificationRead: (id) =>
+    set((state) => ({
+      notifications: state.notifications.map((n) =>
+        n.id === id ? { ...n, read: true } : n
+      ),
+    })),
+  markAllNotificationsRead: () =>
+    set((state) => ({
+      notifications: state.notifications.map((n) => ({ ...n, read: true })),
+    })),
+  get unreadCount() {
+    return get().notifications.filter((n) => !n.read).length
+  },
 }))

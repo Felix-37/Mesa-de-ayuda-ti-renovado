@@ -72,12 +72,17 @@ const priorityFilterOptions: { value: TicketPriority | 'ALL'; label: string }[] 
 
 // ── Component ─────────────────────────────────────────────────
 
-export function TicketList() {
+interface TicketListProps {
+  myTicketsOnly?: boolean
+}
+
+export function TicketList({ myTicketsOnly = false }: TicketListProps) {
   const {
     tickets,
     setTickets,
     categories,
     setCategories,
+    currentUser,
     statusFilter,
     priorityFilter,
     categoryFilter,
@@ -119,6 +124,14 @@ export function TicketList() {
       if (priorityFilter !== 'ALL') params.set('priority', priorityFilter)
       if (categoryFilter !== 'ALL') params.set('categoryId', categoryFilter)
       if (searchQuery.trim()) params.set('search', searchQuery.trim())
+      if (myTicketsOnly && currentUser) {
+        params.set('createdById', currentUser.id)
+      }
+      // RBAC: always pass userId and role so the API filters appropriately
+      if (currentUser) {
+        params.set('userId', currentUser.id)
+        params.set('role', currentUser.role)
+      }
 
       const res = await fetch(`/api/tickets?${params.toString()}`)
       if (!res.ok) throw new Error('Error al cargar tickets')
@@ -129,7 +142,7 @@ export function TicketList() {
     } finally {
       setLoading(false)
     }
-  }, [statusFilter, priorityFilter, categoryFilter, searchQuery, setTickets])
+  }, [statusFilter, priorityFilter, categoryFilter, searchQuery, setTickets, myTicketsOnly, currentUser])
 
   useEffect(() => {
     fetchCategories()
@@ -145,7 +158,11 @@ export function TicketList() {
   }, [statusFilter, priorityFilter, categoryFilter, searchQuery])
 
   // ── Sort tickets ────────────────────────────────────────────
-  const sortedTickets = [...tickets].sort((a, b) => {
+  const userFilteredTickets = myTicketsOnly && currentUser
+    ? tickets.filter((t) => t.createdById === currentUser.id)
+    : tickets
+
+  const sortedTickets = [...userFilteredTickets].sort((a, b) => {
     let cmp = 0
     switch (sortField) {
       case 'title':
@@ -243,7 +260,7 @@ export function TicketList() {
     <div className="space-y-4 p-4 md:p-6">
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-bold">Tickets</h1>
+        <h1 className="text-2xl font-bold">{myTicketsOnly ? 'Mis Tickets' : 'Tickets'}</h1>
         <Button
           onClick={handleNewTicket}
           style={{ backgroundColor: '#1a3f7a' }}

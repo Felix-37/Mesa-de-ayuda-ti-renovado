@@ -47,6 +47,7 @@ const PRIORITIES: { value: TicketPriority; label: string }[] = [
 
 export function KanbanBoard() {
   const {
+    currentUser,
     tickets,
     setTickets,
     updateTicket,
@@ -64,11 +65,16 @@ export function KanbanBoard() {
   const [activeTicket, setActiveTicket] = useState<Ticket | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  // Fetch tickets on mount
+  // Fetch tickets on mount with RBAC
   useEffect(() => {
     async function fetchTickets() {
       try {
-        const res = await fetch('/api/tickets')
+        const params = new URLSearchParams()
+        if (currentUser) {
+          params.set('userId', currentUser.id)
+          params.set('role', currentUser.role)
+        }
+        const res = await fetch(`/api/tickets?${params.toString()}`)
         if (res.ok) {
           const data = await res.json()
           setTickets(data)
@@ -94,7 +100,7 @@ export function KanbanBoard() {
 
     fetchTickets()
     fetchCategories()
-  }, [setTickets, setCategories])
+  }, [setTickets, setCategories, currentUser])
 
   // Sensors
   const sensors = useSensors(
@@ -207,10 +213,10 @@ export function KanbanBoard() {
 
       // Update via API
       try {
-        const res = await fetch(`/api/tickets/${activeId}`, {
+        const res = await fetch(`/api/tickets/${activeId}?userId=${currentUser?.id}&role=${currentUser?.role}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: targetStatus }),
+          body: JSON.stringify({ status: targetStatus, userId: currentUser?.id, role: currentUser?.role }),
         })
 
         if (!res.ok) {

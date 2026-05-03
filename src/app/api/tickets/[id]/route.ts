@@ -1,6 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
+/**
+ * Check if a user has access to a ticket based on RBAC rules
+ */
+function hasTicketAccess(
+  ticket: { createdById: string; assignedToId: string | null },
+  userId: string,
+  role: string
+): boolean {
+  if (role === 'ADMIN') return true;
+  if (role === 'AGENT') {
+    return ticket.assignedToId === userId || ticket.assignedToId === null;
+  }
+  // USER role — only own tickets
+  return ticket.createdById === userId;
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -53,6 +69,18 @@ export async function GET(
       );
     }
 
+    // RBAC access control
+    const searchParams = request.nextUrl.searchParams;
+    const userId = searchParams.get('userId');
+    const role = searchParams.get('role');
+
+    if (userId && role && !hasTicketAccess(ticket, userId, role)) {
+      return NextResponse.json(
+        { error: 'Access denied' },
+        { status: 403 }
+      );
+    }
+
     return NextResponse.json(ticket);
   } catch (error) {
     console.error('Get ticket error:', error);
@@ -70,7 +98,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { title, description, status, priority, categoryId, assignedToId } = body;
+    const { title, description, status, priority, categoryId, assignedToId, userId, role } = body;
 
     // Check if ticket exists
     const existingTicket = await db.ticket.findUnique({ where: { id } });
@@ -78,6 +106,14 @@ export async function PUT(
       return NextResponse.json(
         { error: 'Ticket not found' },
         { status: 404 }
+      );
+    }
+
+    // RBAC access control
+    if (userId && role && !hasTicketAccess(existingTicket, userId, role)) {
+      return NextResponse.json(
+        { error: 'Access denied' },
+        { status: 403 }
       );
     }
 
@@ -151,6 +187,18 @@ export async function DELETE(
       return NextResponse.json(
         { error: 'Ticket not found' },
         { status: 404 }
+      );
+    }
+
+    // RBAC access control
+    const searchParams = request.nextUrl.searchParams;
+    const userId = searchParams.get('userId');
+    const role = searchParams.get('role');
+
+    if (userId && role && !hasTicketAccess(existingTicket, userId, role)) {
+      return NextResponse.json(
+        { error: 'Access denied' },
+        { status: 403 }
       );
     }
 

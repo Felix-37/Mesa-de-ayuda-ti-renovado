@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { StatsCards } from './stats-cards'
 import { Charts } from './charts'
 import { RecentTickets } from './recent-tickets'
+import { useAppStore } from '@/lib/store'
 import type { TicketPriority, Ticket } from '@/lib/types'
 
 interface DashboardData {
@@ -22,6 +23,7 @@ interface DashboardData {
 }
 
 export function DashboardView() {
+  const { currentUser } = useAppStore()
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -30,7 +32,12 @@ export function DashboardView() {
     try {
       setLoading(true)
       setError(null)
-      const res = await fetch('/api/dashboard')
+      const params = new URLSearchParams()
+      if (currentUser) {
+        params.set('userId', currentUser.id)
+        params.set('role', currentUser.role)
+      }
+      const res = await fetch(`/api/dashboard?${params.toString()}`)
       if (!res.ok) throw new Error('Error al cargar datos del dashboard')
       const json = await res.json()
       setData(json)
@@ -39,7 +46,7 @@ export function DashboardView() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [currentUser])
 
   useEffect(() => {
     fetchDashboard()
@@ -95,7 +102,11 @@ export function DashboardView() {
           Panel de Control
         </h1>
         <p className="mt-1 text-muted-foreground">
-          Resumen general de la Mesa de Ayuda TI — UNIAJC
+          {currentUser?.role === 'USER'
+            ? 'Resumen de tus tickets — Mesa de Ayuda TI UNIAJC'
+            : currentUser?.role === 'AGENT'
+            ? 'Resumen de tickets asignados — Mesa de Ayuda TI UNIAJC'
+            : 'Resumen general de la Mesa de Ayuda TI — UNIAJC'}
         </p>
       </div>
 

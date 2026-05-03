@@ -91,7 +91,7 @@ export function TicketDetail() {
     if (!selectedTicketId) return
     setLoading(true)
     try {
-      const res = await fetch(`/api/tickets/${selectedTicketId}`)
+      const res = await fetch(`/api/tickets/${selectedTicketId}?userId=${currentUser?.id ?? ''}&role=${currentUser?.role ?? ''}`)
       if (!res.ok) throw new Error('Error al cargar el ticket')
       const data: Ticket = await res.json()
       setTicket(data)
@@ -101,7 +101,7 @@ export function TicketDetail() {
     } finally {
       setLoading(false)
     }
-  }, [selectedTicketId])
+  }, [selectedTicketId, currentUser])
 
   useEffect(() => {
     fetchTicket()
@@ -112,10 +112,10 @@ export function TicketDetail() {
     if (!ticket) return
     setUpdatingStatus(true)
     try {
-      const res = await fetch(`/api/tickets/${ticket.id}`, {
+      const res = await fetch(`/api/tickets/${ticket.id}?userId=${currentUser?.id ?? ''}&role=${currentUser?.role ?? ''}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify({ status: newStatus, userId: currentUser?.id, role: currentUser?.role }),
       })
       if (!res.ok) {
         const err = await res.json()

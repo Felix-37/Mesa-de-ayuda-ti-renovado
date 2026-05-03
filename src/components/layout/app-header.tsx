@@ -16,10 +16,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { NotificationPanel } from '@/components/notifications/notification-panel'
 import {
   Menu,
   Search,
-  Bell,
   LogOut,
   User,
   Settings,
@@ -30,8 +30,11 @@ const viewTitles: Record<AppView, string> = {
   dashboard: 'Dashboard',
   kanban: 'Tablero Kanban',
   tickets: 'Tickets',
+  'my-tickets': 'Mis Tickets',
   'ticket-detail': 'Detalle de Ticket',
   users: 'Usuarios',
+  profile: 'Mi Perfil',
+  settings: 'Configuración',
 }
 
 export function AppHeader() {
@@ -41,6 +44,7 @@ export function AppHeader() {
     searchQuery,
     setSearchQuery,
     setSidebarOpen,
+    setCurrentView,
     logout,
   } = useAppStore()
 
@@ -64,6 +68,8 @@ export function AppHeader() {
     }
   }
 
+  const showSearch = currentUser.role === 'AGENT' || currentUser.role === 'ADMIN'
+
   return (
     <header className="sticky top-0 z-30 bg-white border-b shadow-sm">
       <div className="flex items-center gap-3 px-4 h-16">
@@ -85,24 +91,22 @@ export function AppHeader() {
         {/* Spacer */}
         <div className="flex-1" />
 
-        {/* Search bar */}
-        <div className="relative max-w-xs w-full hidden sm:block">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Buscar tickets..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 h-9 bg-muted/50 border-0 focus-visible:bg-background focus-visible:border focus-visible:border-input"
-          />
-        </div>
+        {/* Search bar - only for AGENT and ADMIN */}
+        {showSearch && (
+          <div className="relative max-w-xs w-full hidden sm:block">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Buscar tickets..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 h-9 bg-muted/50 border-0 focus-visible:bg-background focus-visible:border focus-visible:border-input"
+            />
+          </div>
+        )}
 
-        {/* Notification bell */}
-        <Button variant="ghost" size="icon" className="relative shrink-0">
-          <Bell className="size-5 text-muted-foreground" />
-          {/* Notification dot */}
-          <span className="absolute top-2 right-2 w-2 h-2 bg-uniajc-yellow rounded-full" />
-        </Button>
+        {/* Notification bell with panel */}
+        <NotificationPanel />
 
         <Separator orientation="vertical" className="h-8 hidden sm:block" />
 
@@ -139,18 +143,24 @@ export function AppHeader() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem className="gap-2">
+              <DropdownMenuItem
+                className="gap-2 cursor-pointer"
+                onClick={() => setCurrentView('profile')}
+              >
                 <User className="size-4" />
                 Mi Perfil
               </DropdownMenuItem>
-              <DropdownMenuItem className="gap-2">
+              <DropdownMenuItem
+                className="gap-2 cursor-pointer"
+                onClick={() => setCurrentView('settings')}
+              >
                 <Settings className="size-4" />
                 Configuración
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              className="gap-2 text-destructive focus:text-destructive"
+              className="gap-2 text-destructive focus:text-destructive cursor-pointer"
               onClick={logout}
             >
               <LogOut className="size-4" />

@@ -1,26 +1,52 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
-export async function GET() {
+/**
+ * Build RBAC where clause for ticket queries
+ */
+function buildRbacWhere(userId: string, role: string): Record<string, unknown> {
+  if (role === 'ADMIN') {
+    return {};
+  }
+  if (role === 'AGENT') {
+    return {
+      OR: [
+        { assignedToId: userId },
+        { assignedToId: null },
+      ],
+    };
+  }
+  // USER role — only own tickets
+  return { createdById: userId };
+}
+
+export async function GET(request: NextRequest) {
   try {
-    // Basic counts
-    const totalTickets = await db.ticket.count();
-    const openTickets = await db.ticket.count({ where: { status: 'OPEN' } });
-    const inProgressTickets = await db.ticket.count({ where: { status: 'IN_PROGRESS' } });
-    const resolvedTickets = await db.ticket.count({ where: { status: 'RESOLVED' } });
-    const closedTickets = await db.ticket.count({ where: { status: 'CLOSED' } });
+    const searchParams = request.nextUrl.searchParams;
+    const userId = searchParams.get('userId');
+    const role = searchParams.get('role');
 
-    // Tickets by priority
-    const lowPriority = await db.ticket.count({ where: { priority: 'LOW' } });
-    const mediumPriority = await db.ticket.count({ where: { priority: 'MEDIUM' } });
-    const highPriority = await db.ticket.count({ where: { priority: 'HIGH' } });
-    const criticalPriority = await db.ticket.count({ where: { priority: 'CRITICAL' } });
+    // Base where clause from RBAC
+    const rbacWhere = userId && role ? buildRbacWhere(userId, role) : {};
 
-    // Tickets by category
+    // Basic counts with RBAC
+    const totalTickets = await db.ticket.count({ where: rbacWhere });
+    const openTickets = await db.ticket.count({ where: { ...rbacWhere, status: 'OPEN' } });
+    const inProgressTickets = await db.ticket.count({ where: { ...rbacWhere, status: 'IN_PROGRESS' } });
+    const resolvedTickets = await db.ticket.count({ where: { ...rbacWhere, status: 'RESOLVED' } });
+    const closedTickets = await db.ticket.count({ where: { ...rbacWhere, status: 'CLOSED' } });
+
+    // Tickets by priority with RBAC
+    const lowPriority = await db.ticket.count({ where: { ...rbacWhere, priority: 'LOW' } });
+    const mediumPriority = await db.ticket.count({ where: { ...rbacWhere, priority: 'MEDIUM' } });
+    const highPriority = await db.ticket.count({ where: { ...rbacWhere, priority: 'HIGH' } });
+    const criticalPriority = await db.ticket.count({ where: { ...rbacWhere, priority: 'CRITICAL' } });
+
+    // Tickets by category with RBAC
     const categoriesWithCounts = await db.category.findMany({
       include: {
         _count: {
-          select: { tickets: true },
+          select: { tickets: { where: rbacWhere } },
         },
       },
       orderBy: { name: 'asc' },
@@ -36,8 +62,9 @@ export async function GET() {
       count: cat._count.tickets,
     }));
 
-    // Recent tickets
+    // Recent tickets with RBAC
     const recentTickets = await db.ticket.findMany({
+      where: rbacWhere,
       take: 5,
       orderBy: { createdAt: 'desc' },
       include: {
@@ -61,7 +88,7 @@ export async function GET() {
       },
     });
 
-    // Tickets over time (last 7 days)
+    // Tickets over time (last 7 days) with RBAC
     const now = new Date();
     const ticketsOverTime = [];
 
@@ -75,6 +102,7 @@ export async function GET() {
 
       const count = await db.ticket.count({
         where: {
+          ...rbacWhere,
           createdAt: {
             gte: day,
             lt: nextDay,
