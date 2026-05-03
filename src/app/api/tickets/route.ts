@@ -136,13 +136,25 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { title, description, priority, categoryId, createdById, assignedToId } = body;
+    const { title, description, priority, categoryId, createdById, assignedToId, role } = body;
 
     if (!title || !description || !categoryId || !createdById) {
       return NextResponse.json(
         { error: 'Title, description, categoryId, and createdById are required' },
         { status: 400 }
       );
+    }
+
+    // Only ADMIN can assign a ticket on creation
+    let finalAssignedToId: string | null = null;
+    if (assignedToId) {
+      if (role !== 'ADMIN') {
+        return NextResponse.json(
+          { error: 'Solo el administrador puede asignar tickets' },
+          { status: 403 }
+        );
+      }
+      finalAssignedToId = assignedToId;
     }
 
     const ticket = await db.ticket.create({
@@ -153,7 +165,7 @@ export async function POST(request: NextRequest) {
         priority: priority || 'MEDIUM',
         categoryId,
         createdById,
-        assignedToId: assignedToId || null,
+        assignedToId: finalAssignedToId,
       },
       include: {
         category: true,

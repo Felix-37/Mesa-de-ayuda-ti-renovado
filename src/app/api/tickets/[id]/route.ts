@@ -123,7 +123,16 @@ export async function PUT(
     if (status !== undefined) updateData.status = status;
     if (priority !== undefined) updateData.priority = priority;
     if (categoryId !== undefined) updateData.categoryId = categoryId;
-    if (assignedToId !== undefined) updateData.assignedToId = assignedToId;
+    // Only ADMIN can assign/reassign tickets
+    if (assignedToId !== undefined) {
+      if (role !== 'ADMIN') {
+        return NextResponse.json(
+          { error: 'Solo el administrador puede asignar tickets' },
+          { status: 403 }
+        );
+      }
+      updateData.assignedToId = assignedToId;
+    }
 
     const ticket = await db.ticket.update({
       where: { id },

@@ -191,6 +191,7 @@ export function TicketForm() {
             priority: values.priority,
             createdById: currentUser.id,
             assignedToId: values.assignedToId || null,
+            role: currentUser.role,
           }),
         })
 
@@ -219,10 +220,10 @@ export function TicketForm() {
     setTicketFormOpen(open)
   }
 
-  // Only ADMIN/AGENT can assign tickets
-  const canAssign = currentUser?.role === 'ADMIN' || currentUser?.role === 'AGENT'
+  // Only ADMIN can assign tickets
+  const canAssign = currentUser?.role === 'ADMIN'
   // Only ADMIN/AGENT can change status on the form
-  const canChangeStatus = isEditing && canAssign
+  const canChangeStatus = isEditing && (currentUser?.role === 'ADMIN' || currentUser?.role === 'AGENT')
 
   return (
     <Dialog open={ticketFormOpen} onOpenChange={handleOpenChange}>
