@@ -331,9 +331,14 @@ export async function GET(request: NextRequest) {
     notifications.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     const result = notifications.slice(0, 20);
 
-    // Mark some as "read" based on age (older than 1 hour = read)
+    // Truncate long messages and mark old notifications as read
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
     for (const n of result) {
+      // Truncate message to 120 chars to prevent overflow
+      if (n.message.length > 120) {
+        n.message = n.message.slice(0, 117) + '...';
+      }
+      // Mark as read if older than 1 hour
       if (new Date(n.createdAt) < oneHourAgo) {
         n.read = true;
       }
