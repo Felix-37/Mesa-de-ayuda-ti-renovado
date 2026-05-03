@@ -119,13 +119,15 @@ function NavButton({
   const button = (
     <button
       onClick={() => onNavClick(item)}
-      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 group relative ${
+      className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-bold transition-all duration-200 group relative ${
+        !sidebarOpen ? 'lg:justify-center lg:px-0' : ''
+      } ${
         active
           ? 'bg-accent-yellow-500 text-navy-950 shadow-md translate-x-1'
           : 'text-navy-300 hover:bg-navy-800/50 hover:text-white'
       }`}
     >
-      <div className={`transition-transform duration-200 group-hover:scale-110 ${
+      <div className={`shrink-0 transition-transform duration-200 group-hover:scale-110 ${
         active ? 'text-navy-950' : 'text-navy-400 group-hover:text-accent-yellow-400'
       }`}>
         {item.icon}
@@ -201,11 +203,11 @@ export function AppSidebar() {
       {/* Sidebar */}
       <aside
         className={`fixed top-0 left-0 z-50 h-full bg-navy-950 text-white flex flex-col transition-all duration-300 ease-in-out sidebar-transition ${
-          sidebarOpen ? 'w-72 translate-x-0' : 'w-16 -translate-x-full lg:translate-x-0 lg:w-16'
+          sidebarOpen ? 'w-72 translate-x-0' : 'w-20 -translate-x-full lg:translate-x-0 lg:w-20'
         } lg:static lg:z-auto`}
       >
         {/* Header with Logo */}
-        <div className="flex items-center gap-3 p-4 pb-2 h-16 border-b border-navy-800/50">
+        <div className="relative flex items-center gap-3 p-4 pb-2 h-16 border-b border-navy-800/50">
           <div className="relative w-10 h-10 shrink-0 bg-white rounded-lg p-1 shadow-lg overflow-hidden">
             <Image
               src="/logo.png"
@@ -232,11 +234,11 @@ export function AppSidebar() {
           >
             <X className="size-5" />
           </Button>
-          {/* Collapse button for desktop */}
+          {/* Collapse/Expand button for desktop */}
           <Button
             variant="ghost"
             size="icon"
-            className="hidden lg:flex text-navy-400 hover:text-white hover:bg-white/10 shrink-0 h-7 w-7"
+            className={`text-navy-400 hover:text-white hover:bg-white/10 shrink-0 h-7 w-7 ${sidebarOpen ? 'hidden lg:flex' : 'hidden lg:absolute lg:right-1 lg:top-1/2 lg:-translate-y-1/2 lg:flex'}`}
             onClick={() => setSidebarOpen(!sidebarOpen)}
           >
             {sidebarOpen ? <ChevronLeft className="size-4" /> : <ChevronRight className="size-4" />}
@@ -261,8 +263,8 @@ export function AppSidebar() {
               <Separator className="bg-navy-800/50 my-2" />
               <button
                 onClick={() => handleNavClick(newTicketItem)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 bg-accent-yellow-500 text-navy-950 hover:bg-accent-yellow-400 shadow-md hover:shadow-lg ${
-                  !sidebarOpen ? 'justify-center lg:justify-center' : ''
+                className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-bold transition-all duration-200 bg-accent-yellow-500 text-navy-950 hover:bg-accent-yellow-400 shadow-md hover:shadow-lg ${
+                  !sidebarOpen ? 'lg:justify-center lg:px-0' : ''
                 }`}
               >
                 <PlusCircle className="size-5 shrink-0" />
@@ -293,7 +295,7 @@ export function AppSidebar() {
         {/* User Section */}
         <div className="p-4 pt-2 space-y-3">
           <Separator className="bg-navy-800/50" />
-          <div className="flex items-center gap-3 pt-2">
+          <div className={`flex items-center gap-3 pt-2 ${!sidebarOpen ? 'lg:justify-center' : ''}`}>
             <Avatar className="size-10 border-2 border-accent-yellow-500 shrink-0">
               {currentUser.avatar && (
                 <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
@@ -315,7 +317,7 @@ export function AppSidebar() {
           </div>
           <Button
             variant="ghost"
-            className={`w-full justify-start gap-2 text-white/70 hover:text-white hover:bg-white/10 ${!sidebarOpen ? 'px-0 lg:px-0' : ''}`}
+            className={`w-full justify-start gap-2 text-white/70 hover:text-white hover:bg-white/10 ${!sidebarOpen ? 'lg:justify-center lg:px-0' : ''}`}
             onClick={logout}
           >
             <LogOut className="size-4 shrink-0" />

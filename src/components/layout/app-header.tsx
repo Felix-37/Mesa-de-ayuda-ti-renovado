@@ -46,6 +46,7 @@ export function AppHeader() {
     currentView,
     searchQuery,
     setSearchQuery,
+    sidebarOpen,
     setSidebarOpen,
     setCurrentView,
     logout,
@@ -78,11 +79,11 @@ export function AppHeader() {
   return (
     <header className="sticky top-0 z-30 bg-white border-b border-gray-200 shadow-sm">
       <div className="flex items-center gap-3 px-4 h-16 sm:px-6">
-        {/* Hamburger menu - mobile */}
+        {/* Hamburger menu - visible on mobile always, on desktop only when sidebar is collapsed */}
         <Button
           variant="ghost"
           size="icon"
-          className="lg:hidden shrink-0"
+          className={`shrink-0 ${sidebarOpen ? 'lg:hidden' : ''}`}
           onClick={() => setSidebarOpen(true)}
         >
           <Menu className="size-5" />
