@@ -36,19 +36,42 @@ yarn-error.log*
 # vercel
 .vercel
 
-
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-local-*
-.claude
-.z-ai-config
+
+# logs
 *.log
 dev.log
 dev.out.log
+server.log
+
+# AI/agent tooling (not part of the app)
+/skills/
+/examples/
+/agent-ctx/
+/.zscripts/
+/download/
+/upload/
+.claude
+.z-ai-config
+local-*
 test
 prompt
+/worklog.md
 
-server.log
-# Skills directory
-/skills/
+# Database files (generated locally)
+/db/
+/prisma/db/
+*.db
+*.db-journal
+
+# Lock files (keep package.json, regenerate on install)
+package-lock.json
+bun.lock
+
+# Caddy (deployment config, not needed in repo)
+/Caddyfile
+
+# Mini-services (separate concern)
+/mini-services/
