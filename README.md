@@ -96,11 +96,11 @@ Ticket ──< Comment              "Un ticket tiene muchos comentarios"
 
 ## ⚙️ Requisitos Previos
 
-| Dependencia | Versión | Nota |
+| Dependencia | Versión | Cómo verificar |
 |---|---|---|
-| **Bun** | ≥ 1.x | Runtime y gestor de paquetes |
-| **Node.js** | ≥ 18 | Compatibilidad con Next.js 16 |
-| **SQLite** | Incluido con Prisma | Base de datos embebida |
+| **Node.js** | ≥ 18 | `node --version` |
+| **npm** | ≥ 9 (incluido con Node.js) | `npm --version` |
+| **SQLite** | Incluido con Prisma | No requiere instalación |
 
 ### Variables de Entorno
 
@@ -119,31 +119,42 @@ DATABASE_URL=file:./db/custom.db
 ### 1. Clonar e instalar dependencias
 
 ```bash
-git clone <repo-url>
-cd my-project
-bun install
+git clone https://github.com/Felix-37/Mesa-de-ayuda-ti-renovado.git
+cd Mesa-de-ayuda-ti-renovado
+npm install
 ```
 
-### 2. Configurar base de datos
+### 2. Configurar entorno y base de datos
 
 ```bash
+# Copiar el archivo de configuración de entorno
+copy .env.example .env        # Windows (CMD)
+cp .env.example .env           # macOS/Linux
+
 # Crear el esquema en SQLite
-bun run db:push
+npm run db:push
 
 # Generar el cliente Prisma
-bun run db:generate
+npm run db:generate
 
-# Cargar datos de prueba (opcional pero recomendado)
-bun run db:seed
+# Cargar datos de prueba (usuarios, tickets, comentarios)
+npm run db:seed
 ```
 
 ### 3. Ejecutar el servidor de desarrollo
 
 ```bash
-bun run dev
+npm run dev
 ```
 
 La aplicación estará disponible en `http://localhost:3000`.
+
+> **💡 Resumen rápido (3 comandos después de clonar):**
+> ```bash
+> npm install
+> copy .env.example .env && npm run db:push && npm run db:generate && npm run db:seed
+> npm run dev
+> ```
 
 ### 4. Credenciales de prueba
 
@@ -160,13 +171,13 @@ Después de ejecutar el seed, estos usuarios están disponibles:
 ### Scripts disponibles
 
 ```bash
-bun run dev          # Servidor de desarrollo (puerto 3000)
-bun run build        # Build de producción (standalone output)
-bun run lint         # Linting con ESLint
-bun run db:push      # Sincronizar esquema Prisma → SQLite
-bun run db:generate   # Generar cliente Prisma
-bun run db:seed      # Cargar datos iniciales
-bun run db:reset     # Resetear base de datos
+npm run dev          # Servidor de desarrollo (puerto 3000)
+npm run build        # Build de producción (standalone output)
+npm run lint         # Linting con ESLint
+npm run db:push      # Sincronizar esquema Prisma → SQLite
+npm run db:generate  # Generar cliente Prisma
+npm run db:seed      # Cargar datos iniciales
+npm run db:reset     # Resetear base de datos
 ```
 
 ---
@@ -499,8 +510,8 @@ docs(api): documentar endpoint de notificaciones
 ### Proceso de PR
 
 1. Crear rama desde `main`: `feat/mi-feature` o `fix/mi-fix`
-2. Desarrollar y probar localmente con `bun run dev`
-3. Verificar lint: `bun run lint` (sin errores)
+2. Desarrollar y probar localmente con `npm run dev`
+3. Verificar lint: `npm run lint` (sin errores)
 4. Abrir Pull Request con descripción del cambio
 5. Esperar revisión antes de merge
 
@@ -515,11 +526,12 @@ docs(api): documentar endpoint de notificaciones
 **Solución:**
 ```bash
 # Verificar que el archivo .env existe y tiene la ruta correcta
-cat .env
+type .env          # Windows
+cat .env           # macOS/Linux
 # Debe mostrar: DATABASE_URL=file:./db/custom.db
 
 # Sincronizar el esquema
-bun run db:push
+npm run db:push
 ```
 
 ### `Module not found: Can't resolve '@prisma/client'`
@@ -528,7 +540,7 @@ bun run db:push
 
 **Solución:**
 ```bash
-bun run db:generate
+npm run db:generate
 ```
 
 ### Las credenciales de prueba no funcionan
@@ -538,7 +550,7 @@ bun run db:generate
 **Solución:**
 ```bash
 # Re-seedear la base de datos
-bun run db:seed
+npm run db:seed
 ```
 
 ### `EADDRINUSE: address already in use :::3000`
@@ -547,12 +559,16 @@ bun run db:seed
 
 **Solución:**
 ```bash
-# Encontrar y matar el proceso
+# Windows: encontrar y matar el proceso
+netstat -ano | findstr :3000
+taskkill /PID <PID> /F
+
+# macOS/Linux:
 lsof -i :3000
 kill -9 <PID>
 
 # O simplemente reiniciar el servidor
-bun run dev
+npm run dev
 ```
 
 ### El sidebar no se abre en desktop
@@ -573,8 +589,8 @@ bun run dev
 
 **Solución:**
 ```bash
-bun run db:push    # Aplica cambios al schema
-bun run db:generate # Regenera el cliente
+npm run db:push    # Aplica cambios al schema
+npm run db:generate # Regenera el cliente
 ```
 
 ### Error de TypeScript después de cambiar tipos
